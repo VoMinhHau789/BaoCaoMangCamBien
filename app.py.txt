@@ -1,0 +1,157 @@
+from flask import Flask, render_template, request
+from flask_socketio import SocketIO
+import sqlite3
+import random
+from threading import Thread, Event
+from datetime import datetime
+
+app = Flask(__name__)
+socketio = SocketIO(app)
+
+# Function to initialize the SQLite database and create tables
+def init_db():
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS data_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            temperature REAL,
+            ph REAL
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS alerts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            alert_message TEXT
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS settings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            temperature_min REAL,
+            temperature_max REAL,
+            ph_min REAL,
+            ph_max REAL
+        )
+    ''')
+    # Insert default settings if not already present
+    cursor.execute('SELECT COUNT(*) FROM settings')
+    if cursor.fetchone()[0] == 0:
+        cursor.execute('INSERT INTO settings (temperature_min, temperature_max, ph_min, ph_max) VALUES (?, ?, ?, ?)', (24, 28, 6.5, 7.5))
+    conn.commit()
+    conn.close()
+
+# Call the function to initialize the database
+init_db()
+
+# Function to generate random fake data
+def generate_fake_data():
+    while not stop_event.is_set():
+        temperature = round(random.uniform(23.5, 28.5), 2)
+        ph = round(random.uniform(6.0, 8.0), 2)
+
+        # Save to database
+        save_to_db(temperature, ph)
+
+        # Send data via WebSocket
+        socketio.emit('new_data', {'temperature': temperature, 'ph': ph})
+
+        # Check for alerts
+        check_alerts(temperature, ph)
+
+        stop_event.wait(5)  # Update every 5 seconds
+
+# Save data to the SQLite database
+def save_to_db(temperature, ph):
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO data_history (temperature, ph) 
+        VALUES (?, ?)''', (temperature, ph))
+    conn.commit()
+    conn.close()
+
+# Save alert to the database
+def save_alert(alert_message):
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute('INSERT INTO alerts (alert_message) VALUES (?)', (alert_message,))
+    conn.commit()
+    conn.close()
+
+# Check if temperature or pH are out of range and save an alert
+def check_alerts(temperature, ph):
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM settings WHERE id=1')
+    settings = cursor.fetchone()
+    conn.close()
+
+    temp_min, temp_max, ph_min, ph_max = settings[1], settings[2], settings[3], settings[4]
+
+    alert_message = None
+    if not (temp_min <= temperature <= temp_max):
+        alert_message = f"Nhiệt độ vượt ngưỡng: {temperature}°C"
+    if not (ph_min <= ph <= ph_max):
+        alert_message = f"Độ pH vượt ngưỡng: {ph}"
+
+    # Save alert if there is one
+    if alert_message:
+        save_alert(alert_message)
+        # Emit alert via WebSocket
+        socketio.emit('new_alert', {'message': alert_message})
+        # Get the current timestamp
+        current_time = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+        # Save alert with timestamp to the text file
+        with open('alerts.txt', 'a') as f:
+            f.write(f"{current_time} - {alert_message}\n")
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/history')
+def history():
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+
+    cursor.execute('SELECT * FROM data_history ORDER BY timestamp DESC LIMIT 10')
+    data_history = cursor.fetchall()
+
+    cursor.execute('SELECT * FROM alerts ORDER BY timestamp DESC LIMIT 10')
+    alerts = cursor.fetchall()
+
+    conn.close()
+    return render_template('history.html', data_history=data_history, alerts=alerts)
+
+@app.route('/settings', methods=['GET', 'POST'])
+def settings():
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+
+    if request.method == 'POST':
+        temp_min = request.form.get('temperature_min')
+        temp_max = request.form.get('temperature_max')
+        ph_min = request.form.get('ph_min')
+        ph_max = request.form.get('ph_max')
+
+        cursor.execute('UPDATE settings SET temperature_min=?, temperature_max=?, ph_min=?, ph_max=? WHERE id=1', 
+                       (temp_min, temp_max, ph_min, ph_max))
+        conn.commit()
+    
+    cursor.execute('SELECT * FROM settings WHERE id=1')
+    settings = cursor.fetchone()
+    conn.close()
+
+    return render_template('settings.html', settings=settings)
+
+# Start the fake data generator in a separate thread
+stop_event = Event()
+data_thread = Thread(target=generate_fake_data)
+data_thread.start()
+
+if __name__ == '__main__':
+    socketio.run(app, debug=True)
+

@@ -1,0 +1,72 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+.container {
+    max-width: 800px;
+    margin: auto;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.data-display {
+    display: flex;
+    justify-content: space-between;
+}
+
+.data-item {
+    background: #eaeaea;
+    padding: 20px;
+    border-radius: 5px;
+    flex: 1;
+    margin: 0 10px;
+}
+
+.charts-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.chart-container {
+    flex: 2;  /* Biểu đồ chiếm 2 phần */
+}
+
+.alerts {
+    flex: 1;  /* Ô cảnh báo chiếm 1 phần */
+    margin-left: 20px;
+}
+
+.alert-history {
+    max-height: 300px;  /* Set a fixed height */
+    overflow-y: auto;   /* Enable vertical scrolling */
+    padding: 10px;
+    border: 1px solid #ddd;
+    background: #f9f9f9;
+    border-radius: 5px;
+}
+
+.alert-history div {
+    padding: 5px;
+    background: #ffcccc;
+    margin: 5px 0;
+    border-radius: 5px;
+}
+
+canvas {
+    width: 100% !important;
+    height: 300px !important;
+}

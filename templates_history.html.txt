@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch Sử Dữ Liệu và Cảnh Báo</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Lịch Sử Dữ Liệu và Cảnh Báo</h1>
+        </header>
+        <h2>Lịch Sử Dữ Liệu</h2>
+        <table>
+            <tr>
+                <th>Thời Gian</th>
+                <th>Nhiệt Độ (°C)</th>
+                <th>Độ pH</th>
+            </tr>
+            {% for row in data_history %}
+            <tr>
+                <td>{{ row[1] }}</td>
+                <td>{{ row[2] }}</td>
+                <td>{{ row[3] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <h2>Lịch Sử Cảnh Báo</h2>
+        <table>
+            <tr>
+                <th>Thời Gian</th>
+                <th>Nội Dung Cảnh Báo</th>
+            </tr>
+            {% for alert in alerts %}
+            <tr>
+                <td>{{ alert[1] }}</td>
+                <td>{{ alert[2] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</body>
+</html>
