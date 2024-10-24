@@ -1,4 +1,4 @@
-****** Mục đích của từng tệp là gì? ******
+            ****** Mục đích của từng tệp là gì? ******
 app.py: Tạo giao diện người dùng cho ứng dụng và chạy chương trình
 statics_tyles.css: Hỗ trợ, làm cho giao diện đẹp và dễ nhìn
 templates_history.html: Tạo giao diện hiển thị lịch sử cảnh báo
