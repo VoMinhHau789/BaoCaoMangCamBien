@@ -8,7 +8,7 @@ from datetime import datetime
 app = Flask(__name__)
 socketio = SocketIO(app)
 
-# Function to initialize the SQLite database and create tables
+# Chức năng khởi tạo cơ sở dữ liệu SQLite và tạo bảng
 def init_db():
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
@@ -36,34 +36,34 @@ def init_db():
             ph_max REAL
         )
     ''')
-    # Insert default settings if not already present
+    # Chèn cài đặt mặc định nếu chưa thay đổi thông số
     cursor.execute('SELECT COUNT(*) FROM settings')
     if cursor.fetchone()[0] == 0:
         cursor.execute('INSERT INTO settings (temperature_min, temperature_max, ph_min, ph_max) VALUES (?, ?, ?, ?)', (24, 28, 6.5, 7.5))
     conn.commit()
     conn.close()
 
-# Call the function to initialize the database
+# Gọi hàm để khởi tạo cơ sở dữ liệu
 init_db()
 
-# Function to generate random fake data
+# Chức năng tạo dữ liệu giả ngẫu nhiên
 def generate_fake_data():
     while not stop_event.is_set():
         temperature = round(random.uniform(23.5, 28.5), 2)
         ph = round(random.uniform(6.0, 8.0), 2)
 
-        # Save to database
+        # Lưu vào cơ sở dữ liệu
         save_to_db(temperature, ph)
 
-        # Send data via WebSocket
+        # Gửi dữ liệu qua WebSocket
         socketio.emit('new_data', {'temperature': temperature, 'ph': ph})
 
-        # Check for alerts
+        # Kiểm tra cảnh báo
         check_alerts(temperature, ph)
 
-        stop_event.wait(5)  # Update every 5 seconds
+        stop_event.wait(5)  # Cập nhật mỗi 5 giây
 
-# Save data to the SQLite database
+# Lưu dữ liệu vào cơ sở dữ liệu SQLite
 def save_to_db(temperature, ph):
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
@@ -73,7 +73,7 @@ def save_to_db(temperature, ph):
     conn.commit()
     conn.close()
 
-# Save alert to the database
+# Lưu cảnh báo vào cơ sở dữ liệu
 def save_alert(alert_message):
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
@@ -81,7 +81,7 @@ def save_alert(alert_message):
     conn.commit()
     conn.close()
 
-# Check if temperature or pH are out of range and save an alert
+# Kiểm tra xem nhiệt độ hoặc độ pH có nằm ngoài phạm vi không và lưu cảnh báo
 def check_alerts(temperature, ph):
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
@@ -97,7 +97,7 @@ def check_alerts(temperature, ph):
     if not (ph_min <= ph <= ph_max):
         alert_message = f"Độ pH vượt ngưỡng: {ph}"
 
-    # Save alert if there is one
+    # Lưu cảnh báo nếu có
     if alert_message:
         save_alert(alert_message)
         # Emit alert via WebSocket
@@ -147,7 +147,7 @@ def settings():
 
     return render_template('settings.html', settings=settings)
 
-# Start the fake data generator in a separate thread
+# Bắt đầu trình tạo dữ liệu giả 
 stop_event = Event()
 data_thread = Thread(target=generate_fake_data)
 data_thread.start()
