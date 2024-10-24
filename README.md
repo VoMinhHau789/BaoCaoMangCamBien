@@ -14,3 +14,7 @@
            Sau đó nhập lệnh cd temperature_ph_nonitoring để trỏ đến thư mục 
            Cuối cùng nhập lệnh python app.py để lấy địa chỉ IP: http://127.0.0.1.5000
            Copy địa chỉ trên, truy cập web, dán địa chỉ này vào và chạy app.
+           Tóm tắt: Nội dung chủ yếu của đồ án này là tạo ra giao diện web cho người dùng có thể dễ dàng hiểu,tiếp cận và sử dụng một cách nhanh chóng. 
+           Có thể truyền, nhận và lưu trữ dữ liệu gọn gàng và dễ truy trập để xem lại lịch sử.
+           Giúp cho sinh viên hiểu hơn, tiếp cận và cọ sát với các phần mềm, ngôn ngữ tạo ra web và lưu trữ được dữ liệu. 
+           Biết cách kết hợp các ứng dụng lại với nhau để tạo nên một bài hoàn chỉnh có liên kết.
